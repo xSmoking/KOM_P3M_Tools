@@ -76,7 +76,7 @@ def import_p3m(filepath, hide_unused_bones):
     data = file_object.read(4)
     vertex_count, face_count = struct.unpack('<2H', data)
 
-    data = file_object.read(260)  # ignores the texture_filename
+    file_object.read(260)  # ignores the texture_filename
 
     print("Reading faces...")
 
@@ -121,4 +121,4 @@ def import_p3m(filepath, hide_unused_bones):
 
 
 if __name__ == "__main__":
-    import_p3m(r"D:\GCFiles\untitled.p3m", "")
+    import_p3m(r"E:\PycharmProjects\P3M_Import_Export\test\untitled.p3m", "")

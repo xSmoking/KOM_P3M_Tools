@@ -123,11 +123,13 @@ def export_object(self, context):
                 for v in vs:
                     vertices[v.index]['bone'] = group.index + len(bones_position)
 
-            for vertex in vertices:
+            for vertex in reversed(vertices):
                 bone = vertex['bone'] - len(bones_position)
-                vertex['position']['x'] = vertex['position']['x'] - bones_position[bone]['head']['x']
-                vertex['position']['y'] = vertex['position']['y'] - bones_position[bone]['head']['y']
-                vertex['position']['z'] = vertex['position']['z'] - bones_position[bone]['head']['z']
+                #vertex['position']['x'] = vertex['position']['x'] - bones_position[bone]['head']['x']
+                #vertex['position']['y'] = vertex['position']['y'] - bones_position[bone]['head']['y']
+                #vertex['position']['z'] = vertex['position']['z'] - bones_position[bone]['head']['z']
+
+                vertex['position']['x'] = vertex['position']['x'] * -1 if vertex['position']['x'] != 0 else 0
 
     with open(self.filepath, 'wb') as file:
         print("\n---------- WRITING TO FILE ----------")
@@ -182,7 +184,7 @@ def export_object(self, context):
             position = vertices[x]['position']
             weight = vertices[x]['weight']
             bone = vertices[x]['bone']
-            normal = vertices[x]['position']
+            normal = vertices[x]['normal']
             texture = vertices[x]['texture']
 
             file.write(struct.pack('<3f', position['x'], position['y'], position['z']))
