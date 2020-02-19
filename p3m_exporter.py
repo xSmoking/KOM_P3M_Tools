@@ -98,7 +98,10 @@ def export_object(self, context):
             print("Exporting vertices...")
             for vertex in obj.data.vertices:
                 v_pos = obj.matrix_world @ vertex.co
+                #v_pos[0] = v_pos[0] * -1 if v_pos[0] != 0 else 0
+
                 v_nor = obj.matrix_world @ vertex.normal
+                v_nor[0] = v_nor[0] * -1 if v_nor[0] != 0 else 0
 
                 temp = {"weight": vertex.groups[0].weight,
                         "position": {"x": v_pos[0], "y": v_pos[2], "z": v_pos[1]},
@@ -111,25 +114,38 @@ def export_object(self, context):
                     face = {"a": obj.data.loops[loop].vertex_index, "b": obj.data.loops[loop + 1].vertex_index, "c": obj.data.loops[loop + 2].vertex_index}
                     faces.append(face)
 
-            print("Exporting UVs...")
-            for face in obj.data.polygons:
-                for vert_idx, loop_idx in zip(face.vertices, face.loop_indices):
-                    uv_coords = obj.data.uv_layers.active.data[loop_idx].uv
-                    vertices[vert_idx]["texture"] = {"u": uv_coords.x, "v": uv_coords.y}
-
             print("Exporting vertex groups...")
             for group in obj.vertex_groups:
                 vs = [v for v in obj.data.vertices if group.index in [vg.group for vg in v.groups]]
                 for v in vs:
                     vertices[v.index]['bone'] = group.index + len(bones_position)
 
-            for vertex in reversed(vertices):
+            count = 0
+            for vertex in vertices:
                 bone = vertex['bone'] - len(bones_position)
-                #vertex['position']['x'] = vertex['position']['x'] - bones_position[bone]['head']['x']
-                #vertex['position']['y'] = vertex['position']['y'] - bones_position[bone]['head']['y']
-                #vertex['position']['z'] = vertex['position']['z'] - bones_position[bone]['head']['z']
+
+                if count == 7:
+                    print('Bone: ' + str(bone) + ' - ', end='')
+                    print(vertex['position']['x'], end='')
+                    print(' - ', end='')
+
+                vertex['position']['x'] = vertex['position']['x'] - bones_position[bone]['head']['x']
+                vertex['position']['y'] = vertex['position']['y'] - bones_position[bone]['head']['y']
+                vertex['position']['z'] = vertex['position']['z'] - bones_position[bone]['head']['z']
 
                 vertex['position']['x'] = vertex['position']['x'] * -1 if vertex['position']['x'] != 0 else 0
+
+                if count == 7:
+                    print(vertex['position']['x'])
+
+                count += 1
+
+            print("Exporting UVs...")
+            for face in obj.data.polygons:
+                for vert_idx, loop_idx in zip(face.vertices, face.loop_indices):
+                    uv_coords = obj.data.uv_layers.active.data[loop_idx].uv
+                    uv_coords.y = 1 - uv_coords.y
+                    vertices[vert_idx]["texture"] = {"u": uv_coords.x, "v": uv_coords.y}
 
     with open(self.filepath, 'wb') as file:
         print("\n---------- WRITING TO FILE ----------")
@@ -162,14 +178,14 @@ def export_object(self, context):
                 else:
                     file.write(b'\xff')
 
-            file.write(struct.pack('2x'))
+            file.write(struct.pack('<2x'))
 
         print("Writing mesh...")
 
         file.write(struct.pack('<H', len(vertices)))
         file.write(struct.pack('<H', len(faces)))
 
-        file.write(struct.pack('260x'))
+        file.write(struct.pack('<260x'))
 
         print("Writing faces...")
 
