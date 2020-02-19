@@ -97,6 +97,9 @@ def import_p3m(filepath, hide_unused_bones):
 
         if index != 255:
             index = index - bone_position_count
+            px += bone_positions[index][0]['x']
+            py += bone_positions[index][0]['y']
+            pz += bone_positions[index][0]['z']
 
         tv = 1 - tv
 
@@ -121,4 +124,4 @@ def import_p3m(filepath, hide_unused_bones):
 
 
 if __name__ == "__main__":
-    import_p3m(r"E:\PycharmProjects\P3M_Import_Export\test\untitled.p3m", "")
+    import_p3m(r"E:\\PycharmProjects\\P3M_Import_Export\\test\\untitled.p3m", "")
