@@ -24,11 +24,10 @@ bl_info = {
 
 import os
 import struct
-
 import bmesh
 import bpy
 import mathutils
-from bpy.props import (BoolProperty, CollectionProperty, EnumProperty, StringProperty)
+from bpy.props import (BoolProperty, CollectionProperty, StringProperty)
 from bpy.types import Operator, OperatorFileListElement
 from bpy_extras.io_utils import ImportHelper
 

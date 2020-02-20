@@ -16,7 +16,7 @@ bl_info = {
     "author": "João S. (xSmoking)",
     "description": "Exports blender model to .p3m, including meshes and bones",
     "blender": (2, 80, 0),
-    "version": (1, 0, 0),
+    "version": (1, 0, 1),
     "location": "File > Export > Perfect 3D Model (.p3m)",
     "warning": "",
     "category": "Import-Export"
@@ -24,18 +24,9 @@ bl_info = {
 
 import os
 import struct
-import math
 import bpy
-import mathutils
-
 from bpy.types import Operator
 from bpy_extras.io_utils import ExportHelper
-
-
-def dump(obj):
-    for attr in dir(obj):
-        if hasattr(obj, attr):
-            print("obj.%s = %s" % (attr, getattr(obj, attr)))
 
 
 def export_object(self, context):
@@ -57,7 +48,6 @@ def export_object(self, context):
                 # Multiply position by the world matrix
                 obj_bone_matrix = obj.matrix_world @ bone.matrix
                 global_location = obj_bone_matrix @ bone.location
-                # heads = obj.matrix_world @ bone.head
 
                 # Get bone head position
                 temp = {
@@ -83,22 +73,12 @@ def export_object(self, context):
 
                 bone_count += 1
 
-            for bone in reversed(bones_position):
-                if bone['parent'] != -1:
-                    parent = bones_position[bone['parent']]
-
-                    bone['head']['x'] = bone['head']['x'] - parent['head']['x']
-                    bone['head']['y'] = bone['head']['y'] - parent['head']['y']
-                    bone['head']['z'] = bone['head']['z'] - parent['head']['z']
-
-                    bone['head']['x'] = bone['head']['x'] * -1 if bone['head']['x'] != 0 else 0
-
         elif obj.type == 'MESH':
             print("\n---------- MESH ----------")
             print("Exporting vertices...")
             for vertex in obj.data.vertices:
                 v_pos = obj.matrix_world @ vertex.co
-                #v_pos[0] = v_pos[0] * -1 if v_pos[0] != 0 else 0
+                v_pos[0] = v_pos[0] * -1 if v_pos[0] != 0 else 0
 
                 v_nor = obj.matrix_world @ vertex.normal
                 v_nor[0] = v_nor[0] * -1 if v_nor[0] != 0 else 0
@@ -118,27 +98,7 @@ def export_object(self, context):
             for group in obj.vertex_groups:
                 vs = [v for v in obj.data.vertices if group.index in [vg.group for vg in v.groups]]
                 for v in vs:
-                    vertices[v.index]['bone'] = group.index + len(bones_position)
-
-            count = 0
-            for vertex in vertices:
-                bone = vertex['bone'] - len(bones_position)
-
-                if count == 7:
-                    print('Bone: ' + str(bone) + ' - ', end='')
-                    print(vertex['position']['x'], end='')
-                    print(' - ', end='')
-
-                vertex['position']['x'] = vertex['position']['x'] - bones_position[bone]['head']['x']
-                vertex['position']['y'] = vertex['position']['y'] - bones_position[bone]['head']['y']
-                vertex['position']['z'] = vertex['position']['z'] - bones_position[bone]['head']['z']
-
-                vertex['position']['x'] = vertex['position']['x'] * -1 if vertex['position']['x'] != 0 else 0
-
-                if count == 7:
-                    print(vertex['position']['x'])
-
-                count += 1
+                    vertices[v.index]['bone'] = group.index
 
             print("Exporting UVs...")
             for face in obj.data.polygons:
@@ -146,6 +106,28 @@ def export_object(self, context):
                     uv_coords = obj.data.uv_layers.active.data[loop_idx].uv
                     uv_coords.y = 1 - uv_coords.y
                     vertices[vert_idx]["texture"] = {"u": uv_coords.x, "v": uv_coords.y}
+
+    # Put vertices to right location
+    for vertex in vertices:
+        if 'bone' in vertex:
+            bone = vertex['bone']
+
+            vertex['position']['x'] = vertex['position']['x'] - bones_position[bone]['head']['x']
+            vertex['position']['y'] = vertex['position']['y'] - bones_position[bone]['head']['y']
+            vertex['position']['z'] = vertex['position']['z'] - bones_position[bone]['head']['z']
+
+            vertex['position']['x'] = vertex['position']['x'] * -1 if vertex['position']['x'] != 0 else 0
+
+    # Put bones head to right location
+    for bone in reversed(bones_position):
+        if bone['parent'] != -1:
+            parent = bones_position[bone['parent']]
+
+            bone['head']['x'] = bone['head']['x'] - parent['head']['x']
+            bone['head']['y'] = bone['head']['y'] - parent['head']['y']
+            bone['head']['z'] = bone['head']['z'] - parent['head']['z']
+
+            bone['head']['x'] = bone['head']['x'] * -1 if bone['head']['x'] != 0 else 0
 
     with open(self.filepath, 'wb') as file:
         print("\n---------- WRITING TO FILE ----------")
@@ -199,7 +181,7 @@ def export_object(self, context):
         for x in range(len(vertices)):
             position = vertices[x]['position']
             weight = vertices[x]['weight']
-            bone = vertices[x]['bone']
+            bone = vertices[x]['bone'] + len(bones_position)
             normal = vertices[x]['normal']
             texture = vertices[x]['texture']
 
