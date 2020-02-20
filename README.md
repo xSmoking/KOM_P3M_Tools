@@ -6,6 +6,7 @@ P3M scripts is an add-on for importing and exporting Perfect 3D Model (.p3m) fil
 ## *Credits*
  - [xSmoking](https://github.com/xSmoking) (Discord: Smk#7324)
  - [Synn](https://github.com/SynnT)
+ - [Phantom*](https://forum.ragezone.com/members/252948.html)
 
 ## *Notes*
 Kom packer only works with python 2.7.\
