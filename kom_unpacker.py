@@ -26,6 +26,7 @@ import os
 import struct
 import sys
 import zlib
+import ntpath
 
 
 class Entry(object):
@@ -79,7 +80,8 @@ def main(argv):
     
     if os.path.isfile(file_name) == False:
         sys.exit(2)
-    
+
+    folder_name = ntpath.basename(file_name).split('.')[0]
     file_object = None
     file_data = None
     
@@ -113,13 +115,16 @@ def main(argv):
         
         offset += 72
 
+    if not os.path.exists(folder_name):
+        os.mkdir(folder_name)
+
     for entry in entries:
         entry_file_data = file_data[offset + entry.relative_offset:offset + entry.relative_offset + entry.compressed_size]
         
         entry_file_data = zlib.decompress(entry_file_data)
         
         try:
-            file_object = open(entry.name, 'wb')
+            file_object = open(str(folder_name) + '/' + str(entry.name), 'wb')
             
             if file_object is not None:
                 file_object.write(entry_file_data)
