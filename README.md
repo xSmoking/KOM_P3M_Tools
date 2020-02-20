@@ -19,8 +19,8 @@ All other scripts work with python 3.x
     
 **kom_unpacker.py:**
 
-    >python kom_unpacker.py file_name.kom
-This will create a folder with the same name as the .kom file with all .p3m files inside it.
+    >python kom_unpacker.py --file file_name.kom
+This will create a folder with the same name as the .kom file with all extracted files inside it.
 
 ## *P3M Installation*
 Go to `Edit > Preferences > Add-ons`, click on `Install...` and select either the python script you want to install.
