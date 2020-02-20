@@ -16,7 +16,7 @@ bl_info = {
     "author": "João S. (xSmoking)",
     "description": "Exports blender model to .p3m, including meshes and bones",
     "blender": (2, 80, 0),
-    "version": (1, 0, 1),
+    "version": (1, 0, 2),
     "location": "File > Export > Perfect 3D Model (.p3m)",
     "warning": "",
     "category": "Import-Export"
@@ -83,16 +83,21 @@ def export_object(self, context):
                 v_nor = obj.matrix_world @ vertex.normal
                 v_nor[0] = v_nor[0] * -1 if v_nor[0] != 0 else 0
 
-                temp = {"weight": vertex.groups[0].weight,
-                        "position": {"x": v_pos[0], "y": v_pos[2], "z": v_pos[1]},
-                        "normal": {"x": v_nor[0], "y": v_nor[2], "z": v_nor[1]}}
+                temp = {
+                    "weight": vertex.groups[0].weight if len(vertex.groups) > 0 else 1,
+                    "position": {"x": v_pos[0], "y": v_pos[2], "z": v_pos[1]},
+                    "normal": {"x": v_nor[0], "y": v_nor[2], "z": v_nor[1]},
+                    "texture": {"u": 0, "v": 0},
+                    "bone": 0
+                }
                 vertices.append(temp)
 
             print("Exporting faces...")
             for loop in range(len(obj.data.loops)):
                 if loop % 3 == 0:
-                    face = {"a": obj.data.loops[loop].vertex_index, "b": obj.data.loops[loop + 1].vertex_index, "c": obj.data.loops[loop + 2].vertex_index}
-                    faces.append(face)
+                    if loop + 2 < len(obj.data.loops):
+                        face = {"a": obj.data.loops[loop].vertex_index, "b": obj.data.loops[loop + 1].vertex_index, "c": obj.data.loops[loop + 2].vertex_index}
+                        faces.append(face)
 
             print("Exporting vertex groups...")
             for group in obj.vertex_groups:
@@ -101,6 +106,7 @@ def export_object(self, context):
                     vertices[v.index]['bone'] = group.index
 
             print("Exporting UVs...")
+
             for face in obj.data.polygons:
                 for vert_idx, loop_idx in zip(face.vertices, face.loop_indices):
                     uv_coords = obj.data.uv_layers.active.data[loop_idx].uv
@@ -163,21 +169,18 @@ def export_object(self, context):
             file.write(struct.pack('<2x'))
 
         print("Writing mesh...")
-
         file.write(struct.pack('<H', len(vertices)))
         file.write(struct.pack('<H', len(faces)))
 
         file.write(struct.pack('<260x'))
 
         print("Writing faces...")
-
         for x in range(len(faces)):
             file.write(struct.pack('<H', faces[x]['a']))
             file.write(struct.pack('<H', faces[x]['b']))
             file.write(struct.pack('<H', faces[x]['c']))
 
         print("Writing vertices...")
-
         for x in range(len(vertices)):
             position = vertices[x]['position']
             weight = vertices[x]['weight']
