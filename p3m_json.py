@@ -1,21 +1,40 @@
 import os
+import getopt
 import struct
 import json
+import sys
 
 
-def import_p3m(filepath, hide_unused_bones):
-    model_name = os.path.basename(filepath)
+def import_p3m(argv):
+    if len(argv) < 2:
+        sys.exit(2)
 
-    print("[Importing %s]" % model_name)
+    try:
+        options, arguments = getopt.getopt(argv, 'i:o:', ['in=', 'out='])
+    except getopt.GetoptError:
+        sys.exit(2)
 
-    model_name = os.path.splitext(model_name)[0]
+    in_path = None
+    out_path = None
 
-    file_object = open(filepath, 'rb')
+    for option, argument in options:
+        if option in ('i', '--in'):
+            in_path = argument
+        elif option in ('o', '--out'):
+            out_path = argument
+
+    if in_path is None or out_path is None:
+        sys.exit(2)
+
+    file_name = os.path.basename(in_path)
+
+    print("[Importing %s]" % file_name)
+
+    model_name = os.path.splitext(file_name)[0]
+
+    file_object = open(in_path, 'rb')
 
     file_object.read(27)  # skips the version
-
-    # if data_chunk != 'Perfact 3D Model (Ver 0.5)\0':
-    #    return
 
     print("Reading bones...")
 
@@ -118,10 +137,11 @@ def import_p3m(filepath, hide_unused_bones):
         "faces": faces,
     }
 
-    file = open("p3m_decompressed.json", "w")
+    file = open(out_path, "w")
     file.write(json.dumps(final_json))
     file.close()
 
 
 if __name__ == "__main__":
-    import_p3m(r"E:\\PycharmProjects\\P3M_Import_Export\\test\\untitled.p3m", "")
+    import_p3m(sys.argv[1:])
+

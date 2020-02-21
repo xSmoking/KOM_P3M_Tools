@@ -76,6 +76,7 @@ def export_object(self, context):
         elif obj.type == 'MESH':
             print("\n---------- MESH ----------")
             print("Exporting vertices...")
+            print(len(obj.data.vertices))
             for vertex in obj.data.vertices:
                 v_pos = obj.matrix_world @ vertex.co
                 v_pos[0] = v_pos[0] * -1 if v_pos[0] != 0 else 0
@@ -106,7 +107,6 @@ def export_object(self, context):
                     vertices[v.index]['bone'] = group.index
 
             print("Exporting UVs...")
-
             for face in obj.data.polygons:
                 for vert_idx, loop_idx in zip(face.vertices, face.loop_indices):
                     uv_coords = obj.data.uv_layers.active.data[loop_idx].uv
