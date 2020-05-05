@@ -23,4 +23,4 @@ All other scripts work with python [3.x](https://www.python.org/downloads/releas
 This will create a folder with the same name as the .kom file with all extracted files inside it.
 
 ## *P3M Installation*
-Go to `Edit > Preferences > Add-ons`, click on `Install...` and select either the python script you want to install.
+Go to `Edit > Preferences > Add-ons`, click on `Install...` and select the python script you want to install.
